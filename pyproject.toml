@@ -1,0 +1,91 @@
+[project]
+name = "fnox-py"
+version = "0.1.0"
+description = "Python bindings for fnox"
+license = "MIT"
+readme = "README.md"
+authors = [{ name = "Zach Fuller", email = "zach.fuller1222@gmail.com" }]
+requires-python = ">=3.12"
+dependencies = []
+
+[build-system]
+requires = ["uv_build>=0.10.11,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["mypy>=1.19.1", "prek>=0.3.6", "ruff>=0.15.6"]
+
+[tool.pyright]
+include = ["src/**", "tests/**"]
+typeCheckingMode = "standard"
+
+[tool.mypy]
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_generics = true
+check_untyped_defs = true
+no_implicit_reexport = true
+disallow_untyped_defs = true
+local_partial_types = true
+warn_return_any = true
+enable_error_code = [
+    "ignore-without-code",
+    "no-untyped-def",
+    "unreachable",
+    "unused-awaitable",
+    "explicit-override",
+    "mutable-override",
+    "exhaustive-match",
+]
+
+[tool.ruff]
+include = ["src/**", "tests/**"]
+exclude = ["tests/data/*.txt", ".venv"]
+line-length = 120
+indent-width = 4
+
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "W",
+    "C90",
+    "I",
+    "N",
+    "UP",
+    "ASYNC",
+    "S",
+    "B",
+    "ERA",
+    "PLE",
+    "PLW",
+    "PLC",
+    "PLW",
+    "PERF",
+    "RUF",
+    "SIM",
+    "PT",
+    "T20",
+    "PTH",
+    "LOG",
+    "G",
+]
+ignore = ["E501", "S101", "PLC0415"]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ty.rules]
+possibly-unresolved-reference = "warn"
