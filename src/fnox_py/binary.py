@@ -5,17 +5,20 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import sys
 import sysconfig
+from fnmatch import fnmatch
 from pathlib import Path
 
 from .errors import FnoxNotFoundError
 
+_MODULE_DIR = str(Path(__file__).parent)
+
 
 def find_fnox_bin() -> str:
     """Return the path to the fnox binary."""
-    import os
 
     # 1. Env-var override (hard error if set but missing)
     env_path = os.environ.get("FNOX_PY_BINARY")
@@ -33,14 +36,14 @@ def find_fnox_bin() -> str:
         sysconfig.get_path("scripts", vars={"base": sys.base_prefix}),
         # 4. Parent-of-package-root (platform-aware)
         (
-            _join(_matching_parents(_module_path(), "Lib/site-packages/fnox_py"), "Scripts")
+            _join(_matching_parents(_MODULE_DIR, "Lib/site-packages/fnox_py"), "Scripts")
             if sys.platform == "win32"
-            else _join(_matching_parents(_module_path(), "lib/python*/site-packages/fnox_py"), "bin")
+            else _join(_matching_parents(_MODULE_DIR, "lib/python*/site-packages/fnox_py"), "bin")
         ),
         # 5. Adjacent-to-package-root (--target installs)
-        _join(_matching_parents(_module_path(), "fnox_py"), "bin"),
+        _join(_matching_parents(_MODULE_DIR, "fnox_py"), "bin"),
         # 6. User scheme scripts
-        sysconfig.get_path("scripts", scheme=_user_scheme()),
+        sysconfig.get_path("scripts", scheme=sysconfig.get_preferred_scheme("user")),
     ]
 
     seen: list[str] = []
@@ -71,15 +74,7 @@ def find_fnox_bin() -> str:
 # ---------------------------------------------------------------------------
 
 
-def _module_path() -> str | None:
-    return str(Path(__file__).parent)
-
-
-def _matching_parents(path: str | None, match: str) -> str | None:
-    from fnmatch import fnmatch
-
-    if not path:
-        return None
+def _matching_parents(path: str, match: str) -> str | None:
     parts = Path(path).parts
     match_parts = match.split("/")
     if len(parts) < len(match_parts):
@@ -97,7 +92,3 @@ def _join(path: str | None, *parts: str) -> str | None:
     if not path:
         return None
     return str(Path(path).joinpath(*parts))
-
-
-def _user_scheme() -> str:
-    return sysconfig.get_preferred_scheme("user")

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import stat
-import textwrap
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -11,18 +10,17 @@ import pytest
 from fnox_py.runner import FnoxResult
 
 
+def write_fake_script(path: Path, body: str = 'echo "$@"') -> Path:
+    """Write a shell script and make it executable."""
+    path.write_text(f"#!/bin/sh\n{body}\n")
+    path.chmod(path.stat().st_mode | stat.S_IEXEC)
+    return path
+
+
 @pytest.fixture
 def fake_fnox(tmp_path: Path) -> Path:
-    """Create a fake fnox shell script that echoes its args as JSON."""
-    script = tmp_path / "fnox"
-    script.write_text(
-        textwrap.dedent("""\
-            #!/bin/sh
-            echo "$@"
-        """)
-    )
-    script.chmod(script.stat().st_mode | stat.S_IEXEC)
-    return script
+    """Create a fake fnox shell script that echoes its args."""
+    return write_fake_script(tmp_path / "fnox")
 
 
 @pytest.fixture
