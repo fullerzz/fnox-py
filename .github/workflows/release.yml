@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      fnox_version:
+        description: "Upstream fnox version to bundle (e.g. 1.0.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Determine fnox version
+        id: version
+        run: |
+          if [ -n "${{ inputs.fnox_version }}" ]; then
+            echo "fnox_version=${{ inputs.fnox_version }}" >> "$GITHUB_OUTPUT"
+          else
+            # Extract version from tag (v1.0.0 -> 1.0.0)
+            echo "fnox_version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run tests
+        run: uv run pytest
+
+      - name: Run linting
+        run: uv run ruff check src/ tests/
+
+      - name: Run type checking
+        run: uv run mypy src/
+
+      - name: Build platform wheels
+        run: |
+          uv run python scripts/build_platform_wheel.py \
+            --fnox-version ${{ steps.version.outputs.fnox_version }} \
+            --output dist/
+
+      - name: Smoke test — verify wheel contents
+        run: |
+          for whl in dist/*.whl; do
+            echo "--- $whl ---"
+            python -m zipfile -l "$whl" | head -20
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
