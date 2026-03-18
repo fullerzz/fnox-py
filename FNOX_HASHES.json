@@ -1,0 +1,28 @@
+{
+  "1.18.0": {
+    "fnox-aarch64-apple-darwin": {
+      "archive_sha256": "d06d3b9c7f663300ea7c8df8b6182b765a5c66adef8f087643e9e41c823b3da3",
+      "binary_sha256": "6c74f91f3fa17df2ec9e13d1f0fb42d662a29b601e77a4d2b5766394e92630a2"
+    },
+    "fnox-aarch64-pc-windows-msvc": {
+      "archive_sha256": "b8872dfd3c677912df60dc1ff838291331811184b539374f26e6dba4541bc5a3",
+      "binary_sha256": "7a765c19a04ae2f4646ebc23f27fff11e7fc53b3367b6239479a01705d77d74c"
+    },
+    "fnox-aarch64-unknown-linux-gnu": {
+      "archive_sha256": "b37e31caf547a2edd834902354fdb15ca57685aa04772b20b8cfd77d409553c2",
+      "binary_sha256": "8d46013cd453c8c43b695e3592c26cfac91270176165b636d9f122e87c70acb5"
+    },
+    "fnox-x86_64-apple-darwin": {
+      "archive_sha256": "f655c05eac805782c55169341f5b4db35cda9b8c826f656c2425905d5952c61b",
+      "binary_sha256": "f720db2516a9db5f13f7ca92460a9a2b92e4a4fd1ed756b3ec7a50a192e6327b"
+    },
+    "fnox-x86_64-pc-windows-msvc": {
+      "archive_sha256": "ba5cf94adcb3d6b9bb36fc910b81d14788630e1104e2675d2bc0c469ab561eb3",
+      "binary_sha256": "447ed6653922d84c12424ac6eb81cee153de58663d4d1f9b7c634d7ad9e05fa0"
+    },
+    "fnox-x86_64-unknown-linux-gnu": {
+      "archive_sha256": "b71fd0f2ac782c682a864907f21ac554dc983f9ce49648221c54c751bcf8f239",
+      "binary_sha256": "6af8dc9a69a8336652a7189e3f170e50472946a597f61c2f6db1c35b4de9c682"
+    }
+  }
+}

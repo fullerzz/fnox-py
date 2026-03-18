@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
+import json
 import shutil
 import stat
 import subprocess
@@ -24,6 +25,7 @@ import tarfile
 import tempfile
 import zipfile
 from pathlib import Path
+from typing import TypedDict
 
 from rich.traceback import install
 
@@ -41,6 +43,12 @@ PLATFORM_MAP: dict[str, str] = {
 GITHUB_RELEASE_URL = "https://github.com/jdx/fnox/releases/download"
 
 VERSION_FILE = Path(__file__).resolve().parent.parent / "FNOX_VERSION.txt"
+HASHES_FILE = Path(__file__).resolve().parent.parent / "FNOX_HASHES.json"
+
+
+class FnoxAssetHashes(TypedDict):
+    archive_sha256: str
+    binary_sha256: str
 
 
 def _normalize_fnox_version(fnox_version: str) -> str:
@@ -56,8 +64,53 @@ def _resolve_fnox_version(requested_version: str | None) -> str:
     return _normalize_fnox_version(VERSION_FILE.read_text().strip())
 
 
-def _download_binary(fnox_version: str, asset_name: str, dest: Path) -> Path:
+def _resolve_expected_hashes(fnox_version: str, platforms: list[str]) -> dict[str, FnoxAssetHashes]:
+    if not HASHES_FILE.is_file():
+        msg = f"FNOX_HASHES.json not found at {HASHES_FILE}"
+        raise FileNotFoundError(msg)
+
+    raw = json.loads(HASHES_FILE.read_text())
+    if not isinstance(raw, dict):
+        msg = f"FNOX_HASHES.json must contain a top-level object: {HASHES_FILE}"
+        raise ValueError(msg)
+
+    version_hashes = raw.get(fnox_version)
+    if not isinstance(version_hashes, dict):
+        msg = f"No expected hashes configured for fnox {fnox_version} in {HASHES_FILE.name}"
+        raise KeyError(msg)
+
+    expected_hashes: dict[str, FnoxAssetHashes] = {}
+    for asset_name in platforms:
+        asset_hashes = version_hashes.get(asset_name)
+        if not isinstance(asset_hashes, dict):
+            msg = f"Missing expected hashes for {asset_name} in {HASHES_FILE.name}"
+            raise KeyError(msg)
+
+        archive_sha256 = asset_hashes.get("archive_sha256")
+        binary_sha256 = asset_hashes.get("binary_sha256")
+        if not isinstance(archive_sha256, str) or not isinstance(binary_sha256, str):
+            msg = f"Invalid expected hashes for {asset_name} in {HASHES_FILE.name}"
+            raise ValueError(msg)
+
+        expected_hashes[asset_name] = {
+            "archive_sha256": archive_sha256,
+            "binary_sha256": binary_sha256,
+        }
+
+    return expected_hashes
+
+
+def _verify_sha256(path: Path, expected_sha256: str, label: str) -> str:
+    actual_sha256 = _sha256_digest(path)
+    if actual_sha256 != expected_sha256:
+        msg = f"SHA256 mismatch for {label}: expected {expected_sha256}, got {actual_sha256}"
+        raise ValueError(msg)
+    return actual_sha256
+
+
+def _download_binary(fnox_version: str, asset_name: str, dest: Path, expected_hashes: FnoxAssetHashes) -> Path:
     """Download an upstream fnox binary from GitHub releases."""
+    dest.mkdir(parents=True, exist_ok=True)
     is_windows = "windows" in asset_name
     ext = ".zip" if is_windows else ".tar.gz"
     url = f"{GITHUB_RELEASE_URL}/v{fnox_version}/{asset_name}{ext}"
@@ -68,6 +121,7 @@ def _download_binary(fnox_version: str, asset_name: str, dest: Path) -> Path:
         ["curl", "-fsSL", "-o", str(archive_path), url],
         check=True,
     )
+    _verify_sha256(archive_path, expected_hashes["archive_sha256"], f"{archive_path.name} archive")
 
     binary_name = "fnox.exe" if is_windows else "fnox"
 
@@ -78,6 +132,7 @@ def _download_binary(fnox_version: str, asset_name: str, dest: Path) -> Path:
                     extracted = dest / binary_name
                     with zf.open(name) as src, extracted.open("wb") as dst:
                         dst.write(src.read())
+                    _verify_sha256(extracted, expected_hashes["binary_sha256"], f"{asset_name} binary")
                     return extracted
     else:
         with tarfile.open(archive_path) as tf:
@@ -89,6 +144,7 @@ def _download_binary(fnox_version: str, asset_name: str, dest: Path) -> Path:
                     extracted = dest / binary_name
                     extracted.write_bytes(f.read())
                     extracted.chmod(extracted.stat().st_mode | stat.S_IEXEC)
+                    _verify_sha256(extracted, expected_hashes["binary_sha256"], f"{asset_name} binary")
                     return extracted
 
     msg = f"Could not find {binary_name} in archive {archive_path}"
@@ -225,6 +281,7 @@ def main() -> None:
     )
     args = parser.parse_args()
     fnox_version = _resolve_fnox_version(args.fnox_version)
+    expected_hashes = _resolve_expected_hashes(fnox_version, args.platforms)
 
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -239,9 +296,9 @@ def main() -> None:
             print(f"\nBuilding {platform_tag}...")
 
             with tempfile.TemporaryDirectory() as dl_dir:
-                binary = _download_binary(fnox_version, asset_name, Path(dl_dir))
+                binary = _download_binary(fnox_version, asset_name, Path(dl_dir), expected_hashes[asset_name])
                 print(f"  Downloaded: {binary.name} ({binary.stat().st_size} bytes)")
-                print(f"  SHA256: {_sha256_digest(binary)}")
+                print(f"  Verified binary SHA256: {_sha256_digest(binary)}")
 
                 out = _repack_wheel(pure_wheel, binary, platform_tag, output_dir)
                 print(f"  Created: {out.name}")
