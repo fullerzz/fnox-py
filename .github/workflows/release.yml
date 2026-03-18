@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
     inputs:
       fnox_version:
-        description: "Upstream fnox version to bundle (e.g. 1.0.0)"
-        required: true
+        description: "Optional upstream fnox version to bundle (defaults to latest release)"
+        required: false
         type: string
 
 permissions:
@@ -31,16 +31,6 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
-      - name: Determine fnox version
-        id: version
-        run: |
-          if [ -n "${{ inputs.fnox_version }}" ]; then
-            echo "fnox_version=${{ inputs.fnox_version }}" >> "$GITHUB_OUTPUT"
-          else
-            # Extract version from tag (v1.0.0 -> 1.0.0)
-            echo "fnox_version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Run tests
         run: uv run pytest
 
@@ -51,10 +41,18 @@ jobs:
         run: uv run mypy src/
 
       - name: Build platform wheels
+        env:
+          FNOX_VERSION_INPUT: ${{ inputs.fnox_version }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_REF_TYPE: ${{ github.ref_type }}
         run: |
-          uv run python scripts/build_platform_wheel.py \
-            --fnox-version ${{ steps.version.outputs.fnox_version }} \
-            --output dist/
+          args=(--output dist/)
+          if [ -n "$FNOX_VERSION_INPUT" ]; then
+            args+=(--fnox-version "$FNOX_VERSION_INPUT")
+          elif [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            args+=(--fnox-version "${GITHUB_REF_NAME#v}")
+          fi
+          uv run python scripts/build_platform_wheel.py "${args[@]}"
 
       - name: Smoke test — verify wheel contents
         run: |

@@ -16,7 +16,14 @@ build-backend = "uv_build"
 fnox-py = "fnox_py.cli:main"
 
 [dependency-groups]
-dev = ["mypy>=1.19.1", "prek>=0.3.6", "ruff>=0.15.6", "pytest>=8.0"]
+dev = [
+    "mypy>=1.19.1",
+    "prek>=0.3.6",
+    "ruff>=0.15.6",
+    "pytest>=8.0",
+    "urllib3>=2.6.3",
+    "rich>=14.3.3",
+]
 
 [tool.pyright]
 include = ["src/**", "tests/**"]
