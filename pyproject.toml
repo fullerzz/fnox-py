@@ -1,7 +1,7 @@
 [project]
 name = "fnox-py"
-version = "1.0.2"
-description = "Python bindings for fnox"
+version = "1.0.3"
+description = "Python wrapper for fnox"
 license = "MIT"
 readme = "README.md"
 authors = [{ name = "Zach Fuller", email = "zach.fuller1222@gmail.com" }]
@@ -17,12 +17,11 @@ fnox-py = "fnox_py.cli:main"
 
 [dependency-groups]
 dev = [
-    "mypy>=1.19.1",
-    "prek>=0.3.6",
-    "ruff>=0.15.6",
-    "pytest>=8.0",
-    "urllib3>=2.6.3",
-    "rich>=14.3.3",
+  "mypy>=1.19.1",
+  "prek>=0.3.6",
+  "ruff>=0.15.6",
+  "pytest>=8.0",
+  "rich>=14.3.3",
 ]
 
 [tool.pyright]
@@ -39,13 +38,13 @@ disallow_untyped_defs = true
 local_partial_types = true
 warn_return_any = true
 enable_error_code = [
-    "ignore-without-code",
-    "no-untyped-def",
-    "unreachable",
-    "unused-awaitable",
-    "explicit-override",
-    "mutable-override",
-    "exhaustive-match",
+  "ignore-without-code",
+  "no-untyped-def",
+  "unreachable",
+  "unused-awaitable",
+  "explicit-override",
+  "mutable-override",
+  "exhaustive-match",
 ]
 
 [tool.ruff]
@@ -58,29 +57,29 @@ target-version = "py313"
 
 [tool.ruff.lint]
 select = [
-    "E",
-    "F",
-    "W",
-    "C90",
-    "I",
-    "N",
-    "UP",
-    "ASYNC",
-    "S",
-    "B",
-    "ERA",
-    "PLE",
-    "PLW",
-    "PLC",
-    "PLW",
-    "PERF",
-    "RUF",
-    "SIM",
-    "PT",
-    "T20",
-    "PTH",
-    "LOG",
-    "G",
+  "E",
+  "F",
+  "W",
+  "C90",
+  "I",
+  "N",
+  "UP",
+  "ASYNC",
+  "S",
+  "B",
+  "ERA",
+  "PLE",
+  "PLW",
+  "PLC",
+  "PLW",
+  "PERF",
+  "RUF",
+  "SIM",
+  "PT",
+  "T20",
+  "PTH",
+  "LOG",
+  "G",
 ]
 ignore = ["E501", "S101", "PLC0415"]
 
