@@ -1,6 +1,6 @@
 # fnox-py
 
-`fnox-py` is a thin Python wrapper around the [`fnox`](https://github.com/jdx/fnox) binary.
+`fnox-py` is a thin Python wrapper around the [`fnox`](https://github.com/jdx/fnox) secrets management tool.
 
 It does not reimplement `fnox` behavior in Python. Instead, it:
 
@@ -11,24 +11,22 @@ It does not reimplement `fnox` behavior in Python. Instead, it:
 
 Python requirement: `>=3.12`
 
+> [!NOTE] Official fnox project links
+> - GitHub repo: [**jdx/fnox**](https://github.com/jdx/fnox)
+> - Fnox docs: [https://fnox.jdx.dev](https://fnox.jdx.dev/)
+
 ## Installation
+
+### uv
+
+```bash
+uv tool install fnox-py
+```
 
 ### pip
 
 ```bash
 pip install fnox-py
-```
-
-### uv
-
-```bash
-uv add fnox-py
-```
-
-If you want the CLI available outside a project environment, you can also use a tool install:
-
-```bash
-uv tool install fnox-py
 ```
 
 ### Bundled binary vs source install
