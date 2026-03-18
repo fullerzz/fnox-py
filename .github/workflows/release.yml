@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       fnox_version:
-        description: "Optional upstream fnox version to bundle (defaults to latest release)"
+        description: "Optional upstream fnox version to bundle (defaults to FNOX_VERSION.txt)"
         required: false
         type: string
 
@@ -41,16 +41,10 @@ jobs:
         run: uv run mypy src/
 
       - name: Build platform wheels
-        env:
-          FNOX_VERSION_INPUT: ${{ inputs.fnox_version }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
-          GITHUB_REF_TYPE: ${{ github.ref_type }}
         run: |
           args=(--output dist/)
-          if [ -n "$FNOX_VERSION_INPUT" ]; then
-            args+=(--fnox-version "$FNOX_VERSION_INPUT")
-          elif [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            args+=(--fnox-version "${GITHUB_REF_NAME#v}")
+          if [ -n "${{ inputs.fnox_version }}" ]; then
+            args+=(--fnox-version "${{ inputs.fnox_version }}")
           fi
           uv run python scripts/build_platform_wheel.py "${args[@]}"
 

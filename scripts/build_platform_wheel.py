@@ -17,7 +17,6 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
-import json
 import shutil
 import stat
 import subprocess
@@ -26,7 +25,6 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-import urllib3
 from rich.traceback import install
 
 install()
@@ -41,51 +39,21 @@ PLATFORM_MAP: dict[str, str] = {
 }
 
 GITHUB_RELEASE_URL = "https://github.com/jdx/fnox/releases/download"
-GITHUB_LATEST_RELEASE_API_URL = "https://api.github.com/repos/jdx/fnox/releases/latest"
+
+VERSION_FILE = Path(__file__).resolve().parent.parent / "FNOX_VERSION.txt"
 
 
 def _normalize_fnox_version(fnox_version: str) -> str:
     return fnox_version.removeprefix("v")
 
 
-def _fetch_latest_release_tag() -> str:
-    http = urllib3.PoolManager()
-    try:
-        response = http.request(
-            "GET",
-            GITHUB_LATEST_RELEASE_API_URL,
-            headers={
-                "Accept": "application/vnd.github+json",
-                "User-Agent": "fnox-py-release-helper",
-            },
-        )
-    except urllib3.exceptions.HTTPError as exc:
-        msg = f"Failed to fetch latest fnox release metadata: {exc}"
-        raise RuntimeError(msg) from exc
-    finally:
-        http.clear()
-
-    if response.status != 200:
-        msg = f"Failed to fetch latest fnox release metadata: HTTP {response.status}"
-        raise RuntimeError(msg)
-
-    try:
-        payload = json.loads(response.data)
-    except json.JSONDecodeError as exc:
-        msg = "GitHub latest release response was not valid JSON"
-        raise RuntimeError(msg) from exc
-
-    tag_name = payload.get("tag_name")
-    if not isinstance(tag_name, str) or not tag_name:
-        msg = "GitHub latest release response did not include a valid tag_name"
-        raise RuntimeError(msg)
-    return tag_name
-
-
 def _resolve_fnox_version(requested_version: str | None) -> str:
     if requested_version:
         return _normalize_fnox_version(requested_version)
-    return _normalize_fnox_version(_fetch_latest_release_tag())
+    if not VERSION_FILE.is_file():
+        msg = f"FNOX_VERSION.txt not found at {VERSION_FILE}"
+        raise FileNotFoundError(msg)
+    return _normalize_fnox_version(VERSION_FILE.read_text().strip())
 
 
 def _download_binary(fnox_version: str, asset_name: str, dest: Path) -> Path:
@@ -245,7 +213,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Build platform-specific fnox-py wheels")
     parser.add_argument(
         "--fnox-version",
-        help="Upstream fnox version (e.g. 1.0.0). Defaults to the latest upstream release.",
+        help="Upstream fnox version (e.g. 1.0.0). Defaults to FNOX_VERSION.txt at the repo root.",
     )
     parser.add_argument("--output", default="dist", help="Output directory for wheels")
     parser.add_argument(

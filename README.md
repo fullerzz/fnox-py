@@ -264,11 +264,13 @@ uv build
 4. rewriting wheel metadata
 5. building an sdist
 
-Example:
+The upstream `fnox` version to bundle is read from `FNOX_VERSION.txt` at the repo root by default. To override it, pass `--fnox-version`:
 
 ```bash
 uv run python scripts/build_platform_wheel.py --fnox-version 1.0.0 --output dist/
 ```
+
+To bump the bundled version, update `FNOX_VERSION.txt` and commit the change.
 
 ## Notes
 
