@@ -269,7 +269,9 @@ The upstream `fnox` version to bundle is read from `FNOX_VERSION.txt` at the rep
 uv run python scripts/build_platform_wheel.py --fnox-version 1.0.0 --output dist/
 ```
 
-To bump the bundled version, update `FNOX_VERSION.txt` and commit the change.
+Expected upstream archive and extracted binary SHA256 values are pinned in `FNOX_HASHES.json` and verified during release builds.
+
+To bump the bundled version, update `FNOX_VERSION.txt`, refresh `FNOX_HASHES.json`, and commit both changes.
 
 ## Notes
 

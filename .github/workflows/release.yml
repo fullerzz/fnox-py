@@ -11,12 +11,14 @@ on:
         required: false
         type: string
 
-permissions:
-  contents: read
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     steps:
       - uses: actions/checkout@v6
 
@@ -55,6 +57,14 @@ jobs:
             python -m zipfile -l "$whl" | head -20
           done
 
+      - name: Generate artifact checksums
+        run: shasum -a 256 dist/* > "$RUNNER_TEMP/dist.SHA256SUMS"
+
+      - name: Attest build provenance
+        uses: actions/attest@v4
+        with:
+          subject-checksums: ${{ runner.temp }}/dist.SHA256SUMS
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -78,6 +88,7 @@ jobs:
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          attestations: true
           repository-url: https://test.pypi.org/legacy/
           print-hash: true
           verbose: true
@@ -98,3 +109,6 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          attestations: true
+          print-hash: true
