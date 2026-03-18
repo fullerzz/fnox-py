@@ -11,7 +11,8 @@ It does not reimplement `fnox` behavior in Python. Instead, it:
 
 Python requirement: `>=3.12`
 
-> [!NOTE] Official fnox project links
+> [!NOTE]
+> Official fnox project links:
 > - GitHub repo: [**jdx/fnox**](https://github.com/jdx/fnox)
 > - Fnox docs: [https://fnox.jdx.dev](https://fnox.jdx.dev/)
 
