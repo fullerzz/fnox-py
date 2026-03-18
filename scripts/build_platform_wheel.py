@@ -76,21 +76,21 @@ def _download_binary(fnox_version: str, asset_name: str, dest: Path) -> Path:
     raise FileNotFoundError(msg)
 
 
-def _sha256_digest(path: Path) -> str:
+def _file_sha256(path: Path) -> hashlib._Hash:
     h = hashlib.sha256()
     with path.open("rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
             h.update(chunk)
-    return h.hexdigest()
+    return h
+
+
+def _sha256_digest(path: Path) -> str:
+    return _file_sha256(path).hexdigest()
 
 
 def _record_hash(path: Path) -> str:
     """Compute hash in RECORD format: sha256=<urlsafe-base64>."""
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            h.update(chunk)
-    digest = base64.urlsafe_b64encode(h.digest()).rstrip(b"=").decode()
+    digest = base64.urlsafe_b64encode(_file_sha256(path).digest()).rstrip(b"=").decode()
     return f"sha256={digest}"
 
 

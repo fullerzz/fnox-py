@@ -6,6 +6,7 @@ import subprocess
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import NoReturn
 
 from .binary import find_fnox_bin
 from .errors import FnoxCommandError, FnoxNotFoundError, FnoxTimeoutError
@@ -70,7 +71,7 @@ def run_passthrough(
     *,
     env: Mapping[str, str] | None = None,
     cwd: str | Path | None = None,
-) -> int:
+) -> NoReturn:
     """Run fnox, forwarding stdio directly. On Unix, replaces the process."""
     fnox = find_fnox_bin()
     cmd = [fnox, *args]
