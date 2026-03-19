@@ -1,0 +1,117 @@
+name: Sync upstream fnox
+
+on:
+  schedule:
+    - cron: "0 0,6,12,18 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Force update even if version matches"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Read current version
+        id: current
+        run: echo "version=$(cat FNOX_VERSION.txt | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Run sync script
+        id: sync
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          args=()
+          if [ "${{ inputs.force }}" = "true" ]; then
+            args+=(--force)
+          fi
+
+          output=$(uv run python scripts/sync_upstream.py "${args[@]}")
+          echo "$output"
+
+          version=$(echo "$output" | grep '^VERSION=' | cut -d= -f2)
+          release_url=$(echo "$output" | grep '^RELEASE_URL=' | cut -d= -f2-)
+          updated=$(echo "$output" | grep '^UPDATED=' | cut -d= -f2)
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "release_url=$release_url" >> "$GITHUB_OUTPUT"
+          echo "updated=$updated" >> "$GITHUB_OUTPUT"
+
+          release_notes=$(echo "$output" | sed -n '/^RELEASE_NOTES_START$/,/^RELEASE_NOTES_END$/{ /^RELEASE_NOTES_START$/d; /^RELEASE_NOTES_END$/d; p; }')
+          {
+            echo "release_notes<<NOTES_EOF"
+            echo "$release_notes"
+            echo "NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check for existing PR
+        if: steps.sync.outputs.updated == 'true'
+        id: check_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          branch="sync/fnox-${{ steps.sync.outputs.version }}"
+          existing=$(gh pr list --head "$branch" --state open --json number --jq 'length')
+          echo "exists=$([[ "$existing" -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Create PR
+        if: steps.sync.outputs.updated == 'true' && steps.check_pr.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_NOTES: ${{ steps.sync.outputs.release_notes }}
+        run: |
+          branch="${{ steps.check_pr.outputs.branch }}"
+          new_version="${{ steps.sync.outputs.version }}"
+          old_version="${{ steps.current.outputs.version }}"
+          release_url="${{ steps.sync.outputs.release_url }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git push origin --delete "$branch" 2>/dev/null || true
+          git checkout -b "$branch"
+          git add FNOX_VERSION.txt FNOX_HASHES.json
+
+          if git diff --cached --quiet; then
+            echo "No file changes detected, skipping PR creation"
+            exit 0
+          fi
+
+          git commit -m "chore: bump bundled fnox to $new_version"
+          git push -u origin "$branch"
+
+          cat > /tmp/pr-body.md <<BODY_EOF
+          ## Upstream release
+
+          Bumps bundled fnox binary from $old_version to $new_version.
+
+          **Release**: $release_url
+
+          ## Release notes
+
+          $RELEASE_NOTES
+          BODY_EOF
+
+          gh pr create \
+            --title "chore: bump bundled fnox to $new_version" \
+            --body-file /tmp/pr-body.md
