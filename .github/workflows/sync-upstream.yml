@@ -79,6 +79,7 @@ jobs:
         if: steps.sync.outputs.updated == 'true' && steps.check_pr.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_NOTES: ${{ steps.sync.outputs.release_notes }}
         run: |
           branch="${{ steps.check_pr.outputs.branch }}"
           new_version="${{ steps.sync.outputs.version }}"
@@ -90,12 +91,16 @@ jobs:
           git push origin --delete "$branch" 2>/dev/null || true
           git checkout -b "$branch"
           git add FNOX_VERSION.txt FNOX_HASHES.json
+
+          if git diff --cached --quiet; then
+            echo "No file changes detected, skipping PR creation"
+            exit 0
+          fi
+
           git commit -m "chore: bump bundled fnox to $new_version"
           git push -u origin "$branch"
 
-          gh pr create \
-            --title "chore: bump bundled fnox to $new_version" \
-            --body "$(cat <<EOF
+          cat > /tmp/pr-body.md <<BODY_EOF
           ## Upstream release
 
           Bumps bundled fnox binary from $old_version to $new_version.
@@ -104,6 +109,9 @@ jobs:
 
           ## Release notes
 
-          ${{ steps.sync.outputs.release_notes }}
-          EOF
-          )"
+          $RELEASE_NOTES
+          BODY_EOF
+
+          gh pr create \
+            --title "chore: bump bundled fnox to $new_version" \
+            --body-file /tmp/pr-body.md
