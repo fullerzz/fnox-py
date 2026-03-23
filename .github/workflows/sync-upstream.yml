@@ -75,6 +75,10 @@ jobs:
           echo "exists=$([[ "$existing" -gt 0 ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
 
+      - name: Run just sync-version
+        if: steps.sync.outputs.updated == 'true' && steps.check_pr.outputs.exists == 'false'
+        run: uv run just sync-version
+
       - name: Create PR
         if: steps.sync.outputs.updated == 'true' && steps.check_pr.outputs.exists == 'false'
         env:
@@ -90,7 +94,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git push origin --delete "$branch" 2>/dev/null || true
           git checkout -b "$branch"
-          git add FNOX_VERSION.txt FNOX_HASHES.json
+          git add FNOX_VERSION.txt FNOX_HASHES.json pyproject.toml uv.lock
 
           if git diff --cached --quiet; then
             echo "No file changes detected, skipping PR creation"
