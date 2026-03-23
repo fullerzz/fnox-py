@@ -1,9 +1,6 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
     inputs:
       fnox_version:
@@ -21,6 +18,26 @@ jobs:
       artifact-metadata: write
     steps:
       - uses: actions/checkout@v6
+
+      - name: Log release trigger
+        run: |
+          case "${{ github.event_name }}" in
+            push)
+              echo "Release started by tag push: ${{ github.ref }}"
+              ;;
+            workflow_dispatch)
+              echo "Release started by workflow_dispatch on ref: ${{ github.ref }}"
+              if [ -n "${{ inputs.fnox_version }}" ]; then
+                echo "workflow_dispatch requested fnox_version=${{ inputs.fnox_version }}"
+              else
+                echo "workflow_dispatch is using FNOX_VERSION.txt from the checked out ref"
+              fi
+              ;;
+            *)
+              echo "::error::Unexpected event: ${{ github.event_name }}"
+              exit 1
+              ;;
+          esac
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
