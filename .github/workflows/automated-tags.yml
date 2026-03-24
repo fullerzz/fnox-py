@@ -1,0 +1,65 @@
+name: Automated Tags
+
+on:
+  push:
+    branches: [main]
+    paths: [FNOX_VERSION.txt]
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: version
+        run: |
+          version=$(cat FNOX_VERSION.txt | tr -d '[:space:]')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Validate version in FNOX_HASHES.json
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if ! jq -e --arg v "$VERSION" 'has($v)' FNOX_HASHES.json > /dev/null; then
+            echo "::error::Version $VERSION not found in FNOX_HASHES.json"
+            exit 1
+          fi
+
+      - name: Create tag
+        id: create_tag
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          tag="v$VERSION"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if git tag -l "$tag" | grep -q .; then
+            echo "Tag $tag already exists, skipping"
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$tag" -m "Release $tag"
+          git push origin "$tag"
+          echo "created=true" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch release workflow
+        if: steps.create_tag.outputs.created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.create_tag.outputs.tag }}
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/actions/workflows/release.yml/dispatches" \
+            -f ref="$TAG" \
+            -f inputs[fnox_version]="$VERSION"
