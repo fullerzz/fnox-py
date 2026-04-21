@@ -1,6 +1,6 @@
 [project]
 name = "fnox-py"
-version = "1.20.0"
+version = "1.21.0"
 description = "Python wrapper for fnox"
 license = "MIT"
 readme = "README.md"
