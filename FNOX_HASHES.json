@@ -1,28 +1,28 @@
 {
-  "1.31.0": {
+  "1.39.0": {
     "fnox-aarch64-apple-darwin": {
-      "archive_sha256": "a4f7b576ce0a4ba5d3075db59dc0c2f0749f6fa6d8a08f2b546588d3bf96b44c",
-      "binary_sha256": "63d330070ba7aa9e8c9dd7a26b4f66ca0c621c349e1b376a59dbef79bd55b445"
+      "archive_sha256": "5604196e7a0aafb949251be1ae088bf0bb524edbfb45748d1be0cbc46e98b8f5",
+      "binary_sha256": "8542d644f9e8e22deed5a15ad94783290e817770f375fb9813144fdbbefa7d6f"
     },
     "fnox-aarch64-pc-windows-msvc": {
-      "archive_sha256": "2254a5389e33574fbefd5e3287a219cac097092db7beb7132d5f8ad79a7ed5be",
-      "binary_sha256": "122260441a64f19b1c8d298a3d9a23d96dc95157bf7242a1ec62365ff98b51ac"
+      "archive_sha256": "5dceaaf6e9c8d6e41c2014f5810740a0d32459a2fdd73932079c9124bc198022",
+      "binary_sha256": "f95719f253604455db51169051d15fe676536d85d9af0279e2347919c9a2e74f"
     },
     "fnox-aarch64-unknown-linux-gnu": {
-      "archive_sha256": "627f93c5fac35c08f613415e25904ed6775c50e19bc8e9c6d61fe5d02014635d",
-      "binary_sha256": "366f90bba6b505fb9aa0f592a67c2f8d0d5e66e878c80b5a561fb62568ea6b2c"
+      "archive_sha256": "491bc3630b704691dd3076e8e4b84a8ee5c6062d6068b88ce49289e3093ca121",
+      "binary_sha256": "0f07af7c55b72251a23da11af542f7876bb9be4e3fc8f2d1e89dcb0cd9979cc9"
     },
     "fnox-x86_64-apple-darwin": {
-      "archive_sha256": "4351a40b6f0649ab4b6a5d1b870d60d2b2d684b66b91bb78ecac0f4b278d6cbe",
-      "binary_sha256": "4b1fcb375a939e5fba16e39ec9bcb16239481016859c68bf4a02eb7551071d44"
+      "archive_sha256": "2234699eeb2495b63bb250229d2e44a5be61d44a13bc780018109b2a4350f2dd",
+      "binary_sha256": "74eae167edb0f592d4deac892f113cbbd2e133c0f8e8cefc26d8e9af7a7bc2a8"
     },
     "fnox-x86_64-pc-windows-msvc": {
-      "archive_sha256": "eaeb77b5411f078900600b353b3291492eb92888af03be332315c4aa4c46baf6",
-      "binary_sha256": "4935a5712f7b303132e5a2d810a8c66437f3bb3c9a2b4cbef8c03b2a80912cf8"
+      "archive_sha256": "6eff6a530b3267a29dba9d8da097d8d2b1d344513fe2b7dd4bbe10ee2bb69c40",
+      "binary_sha256": "7e26fee3383467c0b7e66a4e5ea9906f803ea26244d740e77f51a35bf23cf8a8"
     },
     "fnox-x86_64-unknown-linux-gnu": {
-      "archive_sha256": "5cfc8f5746e44188418174fd8338ffcbf22531626a439d166ec81b20203ea520",
-      "binary_sha256": "48de4f08c1313cdac7e2c53722b5e05722d6b8e59dc53a97ce18d8ac1125fc30"
+      "archive_sha256": "0a623ed38907b9cb633d07593b4d19a4ba741a6a50d226eb243bd16f2f5ba81b",
+      "binary_sha256": "e49bae7d5b8c6f30e0c0e5f02e1a2ce14faae648ba23a5e2c4034bb5476dd8b2"
     }
   }
 }
